@@ -97,7 +97,7 @@ const InstructionType = {
               {
                   PrintText(rDest + " &= 0x" + NumberToHexString(bitmask) + ";");
                   PrintText("Could also be:");
-                  PrintText(rDest + " &= ~0x" + (~bitmask).ToString("X") + ";");
+                  PrintText(rDest + " &= ~0x" + NumberToHexString(~bitmask) + ";");
               }
               else
               {
