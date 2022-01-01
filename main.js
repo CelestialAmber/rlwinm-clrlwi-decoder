@@ -1,15 +1,16 @@
 const InstructionType = {
     Rlwinm: 0,
-    Clrlwi: 1
+    Rlwimi: 1,
+    Clrlwi: 2
 };
 
 var outputText = "";
 
-function DecodeInstruction() {
-    DecodeRlwinm(document.getElementById("instructionString").value);
+function Decode() {
+    DecodeInstruction(document.getElementById("instructionString").value);
 }
 
-function DecodeRlwinm(instruction) {
+function DecodeInstruction(instruction) {
     var parts = instruction.split(",");
     var decodedString = "";
     var isFlagSetVersion = false;
@@ -24,6 +25,9 @@ function DecodeRlwinm(instruction) {
     } else if(parts[0].includes("clrlwi") && length == 3) {
         instructionType = InstructionType.Clrlwi;
         instructionName = "clrlwi";
+    } else if(parts[0].includes("rlwimi") && length == 5){
+        instructionType = InstructionType.Rlwimi;
+        instructionName = "rlwimi";
     } else {
         PrintText("Error: Invalid syntax");
         return;
@@ -55,7 +59,7 @@ function DecodeRlwinm(instruction) {
     if(instructionType == InstructionType.Clrlwi) bitmaskEnd = 31;
 
     try {
-        if(instructionType == InstructionType.Rlwinm) {
+        if(instructionType == InstructionType.Rlwinm || instructionType == InstructionType.Rlwimi) {
             for (i = 2; i < 5; i++) {
                 var val = 0;
                 var numString = parts[i];
@@ -91,24 +95,42 @@ function DecodeRlwinm(instruction) {
 
     var bitmask = GenerateBitmask(bitmaskStart, bitmaskEnd);
 
-    //If the destination and source registers are the same, and the shift amount is 0, then add &= (only anding with a given bitmask)
-    if(rDest == rSource && shiftAmount == 0) {
-        PrintText(rDest + " &= 0x" + NumberToHexString(bitmask) + ";");
-        PrintText("Could also be:");
-        PrintText(rDest + " &= ~0x" + NumberToHexString(~bitmask) + ";");
-    } else {
-
-        if(shiftAmount == 0) {
-            PrintText(rDest + " = " + rSource + " & 0x" + NumberToHexString(bitmask) + ";");
+    if(instructionType == InstructionType.Rlwinm || instructionType == InstructionType.Clrlwi){
+        //If the destination and source registers are the same, and the shift amount is 0, then add &= (only anding with a given bitmask)
+        if(rDest == rSource && shiftAmount == 0) {
+            PrintText(rDest + " &= " + NumberToHexString(bitmask) + ";");
             PrintText("Could also be:");
-            PrintText(rDest + " = " + rSource + " & ~0x" + NumberToHexString(~bitmask) + ";");
+            PrintText(rDest + " &= ~" + NumberToHexString(~bitmask) + ";");
         } else {
-            PrintText(rDest + " = (" + rSource + " << " + shiftAmount + ") & 0x" + NumberToHexString(bitmask) + ";");
-            PrintText("Could also be:");
-            PrintText(rDest + " = (" + rSource + " << " + shiftAmount + ") & ~0x" + NumberToHexString(~bitmask) + ";");
-            //right shift then and is sometimes optimized into rlwinm
-            PrintText(rDest + " = (" + rSource + " >> " + (32 - shiftAmount) + ") & 0x" + NumberToHexString(bitmask) + ";");
-            //PrintText(rDest + " = (rotl(" + rSource + ", " + shiftAmount + ")) & 0x" + NumberToHexString(bitmask) + ";");
+            if(shiftAmount == 0) {
+                PrintText(rDest + " = " + rSource + " & " + NumberToHexString(bitmask) + ";");
+                PrintText("Could also be:");
+                PrintText(rDest + " = " + rSource + " & ~" + NumberToHexString(~bitmask) + ";");
+            } else {
+                PrintText(rDest + " = (" + rSource + " << " + shiftAmount + ") & " + NumberToHexString(bitmask) + ";");
+                PrintText("Could also be:");
+                PrintText(rDest + " = (" + rSource + " << " + shiftAmount + ") & ~" + NumberToHexString(~bitmask) + ";");
+                //right shift then and is sometimes optimized into rlwinm
+                PrintText(rDest + " = (" + rSource + " >> " + (32 - shiftAmount) + ") & " + NumberToHexString(bitmask) + ";");
+                //PrintText(rDest + " = (rotl(" + rSource + ", " + shiftAmount + ")) & 0x" + NumberToHexString(bitmask) + ";");
+            }
+        }
+    }else{
+        //If the destination and source registers are the same, and the shift amount is 0, then add &= (only anding with a given bitmask)
+        if(rDest == rSource && shiftAmount == 0) {
+            PrintText(rDest + " = " + rDest + ";");
+        } else {
+            if(shiftAmount == 0) {
+                //rDest = (rSource & bitmask) + (rDest && ~bitmask)
+                PrintText(rDest + " = (" + rSource + " & " + NumberToHexString(bitmask) + ") + (" + rDest + " & " + NumberToHexString(~bitmask) + ");");
+                PrintText("Could also be:");
+                PrintText(rDest + " = (" + rSource + " & ~" + NumberToHexString(~bitmask) + ") + (" + rDest + " & ~" + NumberToHexString(bitmask) + ");");
+            } else {
+                //rDest = ((rSource << shiftamount) & bitmask) + (rDest & ~bitmask)
+                PrintText(rDest + " = ((" + rSource + "<< " + shiftAmount + ") & " + NumberToHexString(bitmask) + ") + (" + rDest + " & " + NumberToHexString(~bitmask) + ");");
+                PrintText("Could also be:");
+                PrintText(rDest + " = ((" + rSource + "<< " + shiftAmount + ") & ~" + NumberToHexString(~bitmask) + ") + (" + rDest + " & ~" + NumberToHexString(bitmask) + ");");
+            }
         }
     }
 
@@ -146,7 +168,7 @@ function CheckIfValidRegisterString(s) {
 
 function NumberToHexString(num) {
     if(num < 0) num = 0x100000000 + num;
-    return num.toString(16).toUpperCase();
+    return "0x" + num.toString(16).toUpperCase();
 }
 
 function PrintText(text) {
