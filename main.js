@@ -40,7 +40,7 @@ function DecodeInstruction(instruction) {
 
     //Remove all spaces from each part of the instruction
     for (i = 0; i < length; i++) {
-        parts[i] = parts[i].replace(" ", "");
+        parts[i] = parts[i].replace(/\s+/g, '');
     }
 
     var rDest = parts[0],
@@ -175,3 +175,17 @@ function PrintText(text) {
     outputText += text + "<br>";
     document.getElementById("resultText").innerHTML = outputText;
 }
+
+// Get the input field
+var input = document.getElementById("instructionString");
+
+// Execute a function when the user releases a key on the keyboard
+input.addEventListener("keyup", function(event) {
+  // Number 13 is the "Enter" key on the keyboard
+  if (event.key === "Enter") {
+    // Cancel the default action, if needed
+    event.preventDefault();
+    // Trigger the button element with a click
+    document.getElementById("button").click();
+  }
+});
