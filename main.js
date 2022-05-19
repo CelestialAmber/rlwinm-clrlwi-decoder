@@ -115,6 +115,23 @@ function DecodeInstruction(instruction) {
                 //PrintText(rDest + " = (rotl(" + rSource + ", " + shiftAmount + ")) & 0x" + NumberToHexString(bitmask) + ";");
             }
         }
+
+        
+        rangeStart = 31 - bitmaskEnd + shiftAmount;
+        rangeEnd = 31 - bitmaskStart + shiftAmount;
+        
+        startBit = Math.min(rangeStart, rangeEnd);
+        endBit = Math.max(rangeStart, rangeEnd);
+        
+        if(endBit > 31) endBit = 31;
+        
+        bits = Math.abs(endBit - startBit) + 1;
+        
+        if(bits > 1){
+        PrintText("Other info: accesses  bits " + startBit + "-" + endBit);
+        }else{
+          PrintText("Other info: accesses bit " + startBit);
+        }
     }else{
         //If the destination and source registers are the same, and the shift amount is 0, then add &= (only anding with a given bitmask)
         if(rDest == rSource && shiftAmount == 0) {
