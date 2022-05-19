@@ -117,13 +117,14 @@ function DecodeInstruction(instruction) {
         }
 
         
-        rangeStart = 31 - bitmaskEnd + shiftAmount;
-        rangeEnd = 31 - bitmaskStart + shiftAmount;
+        rangeStart = 31 - bitmaskEnd - shiftAmount;
+        rangeEnd = 31 - bitmaskStart - shiftAmount;
         
-        startBit = Math.min(rangeStart, rangeEnd);
-        endBit = Math.max(rangeStart, rangeEnd);
-        
-        if(endBit > 31) endBit = 31;
+        startBit = rangeStart;
+        endBit = rangeEnd;
+
+        if(startBit > 31)startBit %= 31;
+        if(endBit > 31) endBit %= 31;
         
         bits = Math.abs(endBit - startBit) + 1;
         
