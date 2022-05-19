@@ -116,13 +116,14 @@ function DecodeInstruction(instruction) {
             }
         }
 
-        
         rangeStart = 31 - bitmaskEnd - shiftAmount;
         rangeEnd = 31 - bitmaskStart - shiftAmount;
         
         startBit = rangeStart;
         endBit = rangeEnd;
-
+        
+        if(startBit < 0) startBit = 32 + startBit;
+        if(endBit < 0) endBit = 32 + endBit;
         if(startBit > 31)startBit %= 31;
         if(endBit > 31) endBit %= 31;
         
