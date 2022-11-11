@@ -149,7 +149,7 @@ function DecodeInstruction(instruction) {
                 else if(i == 3) bitmaskStart = val;
                 else if(i == 4) bitmaskEnd = val;
             }
-        }else if(instructionType == InstructionType.rlwnm){
+        }else if(instructionType == InstructionType.Rlwnm){
             rShiftAmount = parts[2];
             if(CheckIfValidRegisterString(rShiftAmount) == false){
                 PrintText("Error: The syntax for the shift amount register is invalid.");
