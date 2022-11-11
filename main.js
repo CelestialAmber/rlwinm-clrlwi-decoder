@@ -178,7 +178,7 @@ function DecodeInstruction(instruction) {
                 bitmaskEnd = 31 - val;
                 shiftAmount = val;
             }else if(instructionType == InstructionType.Srwi){
-                bitmaskStart = n;
+                bitmaskStart = val;
                 bitmaskEnd = 31;
                 shiftAmount = 32 - val;
             }else if(instructionType == InstructionType.Clrlwi){
