@@ -1,8 +1,84 @@
 const InstructionType = {
     Rlwinm: 0,
-    Rlwimi: 1,
-    Clrlwi: 2
+    Extlwi: 1,
+    Extrwi: 2,
+    Rotlwi: 2,
+    Rotrwi: 3,
+    Slwi: 4,
+    Srwi: 5,
+    Clrlwi: 6,
+    Clrrwi: 7,
+    Clrlslwi: 8,
+    Rlwimi: 9,
+    Inslwi: 10,
+    Insrwi: 11,
+    Rlwnm: 12,
+    Rotlw: 13
 };
+
+let instructions = [
+    {
+        "name": "rlwinm",
+        "args": 5
+    },
+    {
+        "name": "extlwi",
+        "args": 4
+    },
+    {
+        "name": "extrwi",
+        "args": 4
+    },
+    {
+        "name": "rotlwi",
+        "args": 3
+    },
+    {
+        "name": "rotrwi",
+        "args": 3
+    },
+    {
+        "name": "slwi",
+        "args": 3
+    },
+    {
+        "name": "srwi",
+        "args": 3
+    },
+    {
+        "name": "clrlwi",
+        "args": 3
+    },
+    {
+        "name": "clrrwi",
+        "args": 3
+    },
+    {
+        "name": "clrlslwi",
+        "args": 4
+    },
+    {
+        "name": "rlwimi",
+        "args": 5
+    },
+    {
+        "name": "inslwi",
+        "args": 4
+    },
+    {
+        "name": "insrwi",
+        "args": 4
+    },
+    {
+        "name": "rlwnm",
+        "args": 5
+    },
+    {
+        "name": "rotlw",
+        "args": 3
+    }
+];
+
 
 var outputText = "";
 
@@ -15,23 +91,28 @@ function DecodeInstruction(instruction) {
     var decodedString = "";
     var isFlagSetVersion = false;
     var instructionType;
+    var instructionData;
     var instructionName = "";
     var length = parts.length;
     outputText = "";
+    var validInstruction = false;
 
-    if(parts[0].includes("rlwinm") && length == 5) {
-        instructionType = InstructionType.Rlwinm;
-        instructionName = "rlwinm";
-    } else if(parts[0].includes("clrlwi") && length == 3) {
-        instructionType = InstructionType.Clrlwi;
-        instructionName = "clrlwi";
-    } else if(parts[0].includes("rlwimi") && length == 5){
-        instructionType = InstructionType.Rlwimi;
-        instructionName = "rlwimi";
-    } else {
-        PrintText("Error: Invalid syntax");
+    for(i = 0; i < instructions.length; i++){
+        if(parts[0].includes(instructions[i].name) && length == instructions[i].args){
+            instructionType = i;
+            instructionName = instructions[i].name;
+            instructionData = instructions[i];
+            validInstruction = true;
+            break;
+        }
+    }
+
+    if(!validInstruction){
+        PrintText("Error: Invalid instruction");
         return;
     }
+
+    setsFlags = false;
 
     if(parts[0].includes(".")) setsFlags = true;
 
@@ -54,9 +135,7 @@ function DecodeInstruction(instruction) {
     var shiftAmount = 0;
     var bitmaskStart = 0;
     var bitmaskEnd = 0;
-
-    //If the instruction is clrlwi, set the bitmask end to 31
-    if(instructionType == InstructionType.Clrlwi) bitmaskEnd = 31;
+    var rShiftAmount = ""; //used for rlwnm/rotlw
 
     try {
         if(instructionType == InstructionType.Rlwinm || instructionType == InstructionType.Rlwimi) {
@@ -70,13 +149,86 @@ function DecodeInstruction(instruction) {
                 else if(i == 3) bitmaskStart = val;
                 else if(i == 4) bitmaskEnd = val;
             }
-        } else {
+        }else if(instructionType == InstructionType.rlwnm){
+            rShiftAmount = parts[2];
+            if(CheckIfValidRegisterString(rShiftAmount) == false){
+                PrintText("Error: The syntax for the shift amount register is invalid.");
+                return;
+            }
+
+            bitmaskStart = parseInt(parts[3]);
+            bitmaskStart = parseInt(parts[4]);
+        } else if(instructionType == InstructionType.Rotlwi || instructionType == InstructionType.Rotrwi || instructionType == InstructionType.Slwi || instructionType == InstructionType.Srwi || instructionType == InstructionType.Clrlwi || instructionType == InstructionType.Clrrwi){
+           //rlwinm/rlwimi mnemonics w/ 3 arguments
             var val = 0;
             var numString = parts[2];
 
             val = parseInt(numString);
 
-            bitmaskStart = val;
+            if(instructionType == InstructionType.Rotlwi){
+                bitmaskStart = 0;
+                bitmaskEnd = 31;
+                shiftAmount = val;
+            }else if(instructionType == InstructionType.Rotrwi){
+                bitmaskStart = 0;
+                bitmaskEnd = 31;
+                shiftAmount = 32 - val;
+            }else if(instructionType == InstructionType.Slwi){
+                bitmaskStart = 0;
+                bitmaskEnd = 31 - val;
+                shiftAmount = val;
+            }else if(instructionType == InstructionType.Srwi){
+                bitmaskStart = n;
+                bitmaskEnd = 31;
+                shiftAmount = 32 - val;
+            }else if(instructionType == InstructionType.Clrlwi){
+                bitmaskStart = val;
+                bitmaskEnd = 31;
+                shiftAmount = 0;
+            }else if(instructionType == InstructionType.Clrrwi){
+                bitmaskStart = 0;
+                bitmaskEnd = 31 - val;
+                shiftAmount = 0;
+            }
+        }else if(instructionType == InstructionType.Extlwi || instructionType == InstructionType.Extrwi || instructionType == InstructionType.Clrlslwi || instructionType == InstructionType.Inslwi || instructionType == InstructionType.Insrwi){
+            //rlwinm/rlwimi mnmemonics w/ 4 arguments
+            var numString1 = parts[2];
+            var numString2 = parts[3];
+            var val1 = parseInt(numString1);
+            var val2 = parseInt(numString2)
+
+            if(instructionType == InstructionType.Extlwi){ //rlwinm mnemonics
+                bitmaskStart = 0;
+                bitmaskEnd = val1 - 1;
+                shiftAmount = val2;
+            }else if(instructionType == InstructionType.Extrwi){
+                bitmaskStart = 32 - val1;
+                bitmaskEnd = 31;
+                shiftAmount = val2 + val1;
+            }else if(instructionType == InstructionType.Clrlslwi){
+                bitmaskStart = val1 - val2;
+                bitmaskEnd = 31 - val2;
+                shiftAmount = val2;
+            }else if(instructionType == InstructionType.Inslwi){ //rlwimi mnemonics
+                bitmaskStart = val2;
+                bitmaskEnd = val2 + val1 - 1;
+                shiftAmount = 32 - val2;
+            }else if(instructionType == InstructionType.Insrwi){
+                bitmaskStart = val2;
+                bitmaskEnd = (val2 + val1) - 1;
+                shiftAmount = 32 - (val2 + val1);
+            }
+
+        }else if(instructionType == InstructionType.Rotlw){
+            //rotlw (rlwmn mnemonic)
+            rShiftAmount = parts[2];
+            if(CheckIfValidRegisterString(rShiftAmount) == false){
+                PrintText("Error: The syntax for the shift amount register is invalid.");
+                return;
+            }
+
+            bitmaskStart = 0;
+            bitmaskStart = 31;
         }
 
         if((bitmaskStart < 0 || bitmaskStart > 31) || (bitmaskEnd < 0 || bitmaskEnd > 31)) {
@@ -95,7 +247,8 @@ function DecodeInstruction(instruction) {
 
     var bitmask = GenerateBitmask(bitmaskStart, bitmaskEnd);
 
-    if(instructionType == InstructionType.Rlwinm || instructionType == InstructionType.Clrlwi){
+    if(instructionType == InstructionType.Rlwinm || instructionType == InstructionType.Rotlwi || instructionType == InstructionType.Rotrwi || instructionType == InstructionType.Slwi || instructionType == InstructionType.Srwi || instructionType == InstructionType.Clrlwi || instructionType == InstructionType.Clrrwi || instructionType == InstructionType.Extlwi || instructionType == InstructionType.Extrwi || instructionType == InstructionType.Clrlslwi){
+       //Rlwinm
         //If the destination and source registers are the same, and the shift amount is 0, then add &= (only anding with a given bitmask)
         if(rDest == rSource && shiftAmount == 0) {
             PrintText(rDest + " &= " + NumberToHexString(bitmask) + ";");
@@ -134,7 +287,8 @@ function DecodeInstruction(instruction) {
         }else{
           PrintText("Other info: accesses bit " + startBit);
         }
-    }else{
+    }else if(instructionType == InstructionType.Rlwimi || instructionType == InstructionType.Inslwi || instructionType == InstructionType.Insrwi){
+         //Rlwimi instructions
         //If the destination and source registers are the same, and the shift amount is 0, then add &= (only anding with a given bitmask)
         if(rDest == rSource && shiftAmount == 0) {
             PrintText(rDest + " = " + rDest + ";");
@@ -150,6 +304,30 @@ function DecodeInstruction(instruction) {
                 PrintText("Could also be:");
                 PrintText(rDest + " = ((" + rSource + "<< " + shiftAmount + ") & ~" + NumberToHexString(~bitmask) + ") + (" + rDest + " & ~" + NumberToHexString(bitmask) + ");");
             }
+        }
+    }else{
+         //Rlwnm instructions
+        PrintText(rDest + " = (" + rSource + " << " + rShiftAmount + ") & " + NumberToHexString(bitmask) + ";");
+        PrintText("Could also be:");
+        PrintText(rDest + " = (" + rSource + " << " + rShiftAmount + ") & ~" + NumberToHexString(~bitmask) + ";");
+
+        rangeStart = 31 - bitmaskEnd - shiftAmount;
+        rangeEnd = 31 - bitmaskStart - shiftAmount;
+        
+        startBit = rangeStart;
+        endBit = rangeEnd;
+        
+        if(startBit < 0) startBit = 32 + startBit;
+        if(endBit < 0) endBit = 32 + endBit;
+        if(startBit > 31)startBit %= 31;
+        if(endBit > 31) endBit %= 31;
+        
+        bits = Math.abs(endBit - startBit) + 1;
+        
+        if(bits > 1){
+        PrintText("Other info: accesses  bits " + startBit + "-" + endBit);
+        }else{
+          PrintText("Other info: accesses bit " + startBit);
         }
     }
 
