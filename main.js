@@ -2,18 +2,18 @@ const InstructionType = {
     Rlwinm: 0,
     Extlwi: 1,
     Extrwi: 2,
-    Rotlwi: 2,
-    Rotrwi: 3,
-    Slwi: 4,
-    Srwi: 5,
-    Clrlwi: 6,
-    Clrrwi: 7,
-    Clrlslwi: 8,
-    Rlwimi: 9,
-    Inslwi: 10,
-    Insrwi: 11,
-    Rlwnm: 12,
-    Rotlw: 13
+    Rotlwi: 3,
+    Rotrwi: 4,
+    Slwi: 5,
+    Srwi: 6,
+    Clrlwi: 7,
+    Clrrwi: 8,
+    Clrlslwi: 9,
+    Rlwimi: 10,
+    Inslwi: 11,
+    Insrwi: 12,
+    Rlwnm: 13,
+    Rotlw: 14
 };
 
 let instructions = [
