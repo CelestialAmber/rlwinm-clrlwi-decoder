@@ -260,14 +260,25 @@ function DecodeInstruction(instruction) {
                 PrintText("Could also be:");
                 PrintText(rDest + " = " + rSource + " & ~" + NumberToHexString(~bitmask) + ";");
             } else {
+              /* mwcc sometimes does an optimization where n*2^m will become rlwinm, where the zero bits are ensured to be 0
+              through anding with a bitmask (for example, n*4 becomes n<<2 & ~0x3, clearing the lower bits */
+              console.log(NumberToHexString(~((1 << shiftAmount) - 1)));
+              console.log(NumberToHexString(~(((1 << (32-shiftAmount)) - 1) << shiftAmount)));
+              if(bitmask == (~((1 << shiftAmount) - 1))){
+                  PrintText(rDest + " = " + rSource + " << " + shiftAmount + ";");
+              }else if(bitmask == ~(((1 << (32-shiftAmount)) - 1) << shiftAmount)){
+                //for division, the same happens, except the top bits are cleared (bits are effectively right shifted through rlwinm)
+                PrintText(rDest + " = " + rSource + " >> " + (32 - shiftAmount) + ";");
+              }else{
                 PrintText(rDest + " = (" + rSource + " << " + shiftAmount + ") & " + NumberToHexString(bitmask) + ";");
                 PrintText("Could also be:");
                 PrintText(rDest + " = (" + rSource + " << " + shiftAmount + ") & ~" + NumberToHexString(~bitmask) + ";");
                 //right shift then and is sometimes optimized into rlwinm
                 PrintText(rDest + " = (" + rSource + " >> " + (32 - shiftAmount) + ") & " + NumberToHexString(bitmask) + ";");
                 //PrintText(rDest + " = (rotl(" + rSource + ", " + shiftAmount + ")) & 0x" + NumberToHexString(bitmask) + ";");
-            }
+          }
         }
+      }
 
         rangeStart = 31 - bitmaskEnd - shiftAmount;
         rangeEnd = 31 - bitmaskStart - shiftAmount;
