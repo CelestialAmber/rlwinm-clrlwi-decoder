@@ -303,15 +303,15 @@ function DecodeInstruction(instruction) {
             PrintText(rDest + " = " + rDest + ";");
         } else {
             if(shiftAmount == 0) {
-                //rDest = (rSource & bitmask) + (rDest && ~bitmask)
-                PrintText(rDest + " = (" + rSource + " & " + NumberToHexString(bitmask) + ") + (" + rDest + " & " + NumberToHexString(~bitmask) + ");");
+                //rDest = (rSource & bitmask) | (rDest && ~bitmask)
+                PrintText(rDest + " = (" + rSource + " & " + NumberToHexString(bitmask) + ") | (" + rDest + " & " + NumberToHexString(~bitmask) + ");");
                 PrintText("Could also be:");
-                PrintText(rDest + " = (" + rSource + " & ~" + NumberToHexString(~bitmask) + ") + (" + rDest + " & ~" + NumberToHexString(bitmask) + ");");
+                PrintText(rDest + " = (" + rSource + " & ~" + NumberToHexString(~bitmask) + ") | (" + rDest + " & ~" + NumberToHexString(bitmask) + ");");
             } else {
-                //rDest = ((rSource << shiftamount) & bitmask) + (rDest & ~bitmask)
-                PrintText(rDest + " = ((" + rSource + "<< " + shiftAmount + ") & " + NumberToHexString(bitmask) + ") + (" + rDest + " & " + NumberToHexString(~bitmask) + ");");
+                //rDest = ((rSource << shiftamount) & bitmask) | (rDest & ~bitmask)
+                PrintText(rDest + " = ((" + rSource + "<< " + shiftAmount + ") & " + NumberToHexString(bitmask) + ") | (" + rDest + " & " + NumberToHexString(~bitmask) + ");");
                 PrintText("Could also be:");
-                PrintText(rDest + " = ((" + rSource + "<< " + shiftAmount + ") & ~" + NumberToHexString(~bitmask) + ") + (" + rDest + " & ~" + NumberToHexString(bitmask) + ");");
+                PrintText(rDest + " = ((" + rSource + "<< " + shiftAmount + ") & ~" + NumberToHexString(~bitmask) + ") | (" + rDest + " & ~" + NumberToHexString(bitmask) + ");");
             }
         }
     }else{
