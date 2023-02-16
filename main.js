@@ -274,6 +274,9 @@ function DecodeInstruction(instruction) {
                 //right shift then and is sometimes optimized into rlwinm
                 PrintText(rDest + " = (" + rSource + " >> " + (32 - shiftAmount) + ") & " + NumberToHexString(bitmask) + ";");
                 //PrintText(rDest + " = (rotl(" + rSource + ", " + shiftAmount + ")) & 0x" + NumberToHexString(bitmask) + ";");
+                //for things like (a & 0xFF) << 4, if it gets turned into rlwinm the value to and by gets shifted since it will be applied after (in this case, it becomes (a << 4) & 0xFF0)
+                PrintText(rDest + " = (" + rSource + " & " + NumberToHexString(bitmask >> shiftAmount) + ") << " + shiftAmount + ";");
+                
           }
         }
       }
