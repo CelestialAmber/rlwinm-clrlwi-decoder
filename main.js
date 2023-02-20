@@ -264,9 +264,13 @@ function DecodeInstruction(instruction) {
               through anding with a bitmask (for example, n*4 becomes n<<2 & ~0x3, clearing the lower bits */
               if(bitmask == (~((1 << shiftAmount) - 1))){
                   PrintText(rDest + " = " + rSource + " << " + shiftAmount + ";");
+                  PrintText("Could also be:");
+                  PrintText(rDest + " = " + rSource + "*" + (1 << shiftAmount) + ";");
               }else if(bitmask == ~(((1 << (32-shiftAmount)) - 1) << shiftAmount)){
                 //for division, the same happens, except the top bits are cleared (bits are effectively right shifted through rlwinm)
                 PrintText(rDest + " = " + rSource + " >> " + (32 - shiftAmount) + ";");
+                PrintText("Could also be:");
+                  PrintText(rDest + " = " + rSource + "/" + (1 << (32 - shiftAmount)) + ";");
               }else{
                 PrintText(rDest + " = (" + rSource + " << " + shiftAmount + ") & " + NumberToHexString(bitmask) + ";");
                 PrintText("Could also be:");
